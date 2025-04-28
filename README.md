@@ -4,21 +4,12 @@ Water Quality Index Model Accuracy Analysis: Evaluating Attribute Influence Acro
 ### 📚 Content
 - Abstract
 - Introduction
-
-Existed System
-
-Proposed System
-
-Hardware Requirements
-
-Software Requirements
-
-UML Diagrams
-
-Results
-
-Advantages & Disadvantages
-
-Future Scope
-
-Conclusion
+- Existed System
+- Proposed System
+- Hardware Requirements
+- Software Requirements
+- UML Diagrams
+- Results
+- Advantages & Disadvantages
+- Future Scope
+- Conclusion
