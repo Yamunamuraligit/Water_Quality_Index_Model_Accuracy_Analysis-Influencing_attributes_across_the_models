@@ -1,1 +1,2 @@
-# Water_Quality_Index_Model_Accuracy_Analysis-Influencing_attributes_across_the_models
+### 🌊 Water Quality Index (WQI)
+Water Quality Index Model Accuracy Analysis: Evaluating Attribute Influence Across ML Techniques
