@@ -1,0 +1,152 @@
+##### Importing the packages
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.metrics import accuracy_score
+
+import warnings
+
+warnings.filterwarnings('ignore')
+
+st.set_page_config(
+    page_title = "Identifying WQI"
+)
+st.title("Water Quality Index using machine learning algorithms")
+
+st.sidebar.success("select a above page")
+#Importing the dataset from the files
+st.info("Dataset preview")
+df = pd.read_csv("water_3.csv")
+st.write(df.head())
+
+st.info("Total number of columns and rows")
+df.shape
+
+st.info("Total columns")
+df.rename(str.strip, axis='columns', inplace=True) # To remove the space before the column name
+st.write(df.columns)
+st.info("Count null values")
+st.write(df.isnull().sum())
+st.info("Fill nulls, Recount missing")
+for col in df.columns: # finding the null values and their are replaced with the mean value
+    if df[col].isnull().sum() > 0:
+        val = df[col].mean()
+        df[col] = df[col].fillna(val)
+
+st.write(df.isnull().sum())
+
+st.info("Counting the Potability Responses")
+st.write(df['Potability'].value_counts()) 
+st.info("Exclude the potability")
+features = df.drop(['Potability'], axis=1)
+
+st.write(features)
+
+target = df.Potability
+st.write(target)
+
+st.write("Size of the target",target.shape)
+
+X_train, X_val, Y_train, Y_val = train_test_split(features, target, test_size=0.2)#split the model into train and test.The size of size model is 20%
+ros = RandomOverSampler(sampling_strategy='minority', random_state=22)
+X, Y = ros.fit_resample(X_train, Y_train) #RandomOverSampler makes the output values are equal.
+st.info("X values")
+st.write(X)
+st.info("Y values")
+st.write(Y)
+
+
+# XGBoost Classifier
+st.info("XGBoost model")
+from xgboost import XGBClassifier
+xgb = XGBClassifier()
+xgb.fit(X, Y)
+y_pred = xgb.predict(X)
+acc_xgb1 = accuracy_score(Y, y_pred)
+st.write("Training model accuracy (in %) : ", acc_xgb1 * 100)
+
+y_pred = xgb.predict(X_val)
+acc_xgb2 = accuracy_score(Y_val,y_pred)
+st.write("Testing model accuracy (in %) : ",acc_xgb2 *100)
+
+st.session_state['xgb_model_3'] = xgb
+st.session_state['xgb_train_accuracy_3'] = acc_xgb1*100 # Save training accuracy
+st.session_state['xgb_test_accuracy_3'] = acc_xgb2*100  # Save testing accuracy
+
+
+import streamlit as st
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+st.info("Logistic Regression model")
+
+# Initialize Logistic Regression model
+log_reg = LogisticRegression(max_iter=1000)  # Increase max_iter to ensure convergence
+
+# Train the model
+log_reg.fit(X, Y)
+
+# Training accuracy
+y_pred_train = log_reg.predict(X)
+acc_log_train = accuracy_score(Y, y_pred_train)
+st.write("Training model accuracy (in %): ", acc_log_train * 100)
+
+# Testing accuracy
+y_pred_test = log_reg.predict(X_val)
+acc_log_test = accuracy_score(Y_val, y_pred_test)
+st.write("Testing model accuracy (in %): ", acc_log_test * 100)
+
+# Store model and accuracy in session state
+st.session_state['logistic_model'] = log_reg
+st.session_state['logistic_train_accuracy'] = acc_log_train * 100  # Save training accuracy
+st.session_state['logistic_test_accuracy_3'] = acc_log_test * 100  # Save testing accuracy
+
+# ANN 
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from sklearn.metrics import accuracy_score
+
+# Display Model Info
+st.info("Artificial Neural Network (ANN) Model")
+
+# Define ANN Model
+ann = Sequential([
+    Dense(64, activation='relu', input_shape=(X.shape[1],)),  # Input Layer
+    Dense(32, activation='relu'),  # Hidden Layer
+    Dense(1, activation='sigmoid')  # Output Layer (Binary Classification)
+])
+
+# Compile the Model
+ann.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Train the Model
+ann.fit(X, Y, epochs=50, batch_size=32, verbose=0)  # Training the ANN
+
+# Predict on Training Data
+y_pred_train = (ann.predict(X) > 0.5).astype(int)
+acc_ann_train = accuracy_score(Y, y_pred_train)
+
+st.write("Training model accuracy (in %) : ", acc_ann_train * 100)
+
+# Predict on Testing Data
+y_pred_test = (ann.predict(X_val) > 0.5).astype(int)
+acc_ann_test = accuracy_score(Y_val, y_pred_test)
+
+st.write("Testing model accuracy (in %) : ", acc_ann_test * 100)
+
+# Save Model & Accuracy in Streamlit Session State
+st.session_state['ann_model'] = ann
+st.session_state['ann_train_accuracy'] = acc_ann_train * 100
+st.session_state['ann_test_accuracy_3'] = acc_ann_test * 100
+
+st.info("Comparision of the Models with Test Accuracy")
+
+compare = pd.DataFrame({'Models' : ['XGBoost Classifier','Logistic Regression','Aritifical Neural network'],
+                        'Values' :[st.session_state['xgb_test_accuracy_3'] ,st.session_state['logistic_test_accuracy_3'],st.session_state['ann_test_accuracy_3'] ]})
+compare.set_index('Models',inplace =True)
+st.bar_chart(compare)
